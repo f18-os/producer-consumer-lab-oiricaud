@@ -144,12 +144,13 @@ def extract_color_frames():
         count += 1
 
 
-p = ProducerThread(name='producer')
-c = ConsumerThread(name='consumer')
+if __name__ == '__main__':
+    p = ProducerThread(name='producer')
+    c = ConsumerThread(name='consumer')
 
-p.start()
-time.sleep(2)
-c.start()
-time.sleep(2)
+    p.start()
+    time.sleep(2)
+    c.start()
+    time.sleep(2)
 
-play_video()
+    play_video()
