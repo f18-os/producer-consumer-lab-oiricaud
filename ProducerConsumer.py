@@ -4,8 +4,6 @@ import threading
 import time
 import logging
 import queue
-import base64
-import numpy as np
 import cv2
 import os
 
@@ -28,7 +26,6 @@ logging.basicConfig(level=logging.DEBUG,
 BUF_SIZE = 10
 q = queue.Queue(BUF_SIZE)
 
-q2 = queue.Queue(BUF_SIZE)
 
 
 class ProducerThread(threading.Thread):
@@ -60,37 +57,43 @@ class ConsumerThread(threading.Thread):
         return
 
 
-def displayFrames():
-    # initialize frame count
+def play_video():
     count = 0
+    # load the frame
+    frameFileName = "{}/frame_{:04d}.jpg".format(outputDir, count)
+    frame = cv2.imread(frameFileName)
+    startTime = time.time()
 
-    # go through each frame in the buffer until the buffer is empty
-    while not q2.empty():
-        # get the next frame
-        frameAsText = q2.get()
-
-        print("FRAME AS TEXT ", frameAsText)
-        # decode the frame
-        jpgRawImage = base64.b64decode(frameAsText)
-
-            # convert the raw frame to a numpy array
-        jpgImage = np.asarray(bytearray(jpgRawImage), dtype=np.uint8)
-
-        # get a jpg encoded frame
-        img = cv2.imdecode(jpgImage, cv2.IMREAD_UNCHANGED)
+    while frame is not None:
 
         print("Displaying frame {}".format(count))
+        # Display the frame in a window called "Video"
+        cv2.imshow("Video", frame)
 
-        # display the image in a window called "video" and wait 42ms
-        # before displaying the next frame
-        cv2.imshow("Video", img)
-        if cv2.waitKey(42) and 0xFF == ord("q"):
+        # compute the amount of time that has elapsed
+        # while the frame was processed
+        elapsedTime = int((time.time() - startTime) * 1000)
+        print("Time to process frame {} ms".format(elapsedTime))
+
+        # determine the amount of time to wait, also
+        # make sure we don't go into negative time
+        timeToWait = max(1, frameDelay - elapsedTime)
+
+        # Wait for 42 ms and check if the user wants to quit
+        if cv2.waitKey(timeToWait) and 0xFF == ord("q"):
             break
 
-        count += 1
+            # get the start time for processing the next frame
+        startTime = time.time()
 
-    print("Finished displaying all frames")
-    # cleanup the windows
+        # get the next frame filename
+        count += 1
+        frameFileName = "{}/frame_{:04d}.jpg".format(outputDir, count)
+
+        # Read the next frame file
+        frame = cv2.imread(frameFileName)
+
+    # make sure we cleanup the windows, otherwise we might end up with a mess
     cv2.destroyAllWindows()
 
 
@@ -121,37 +124,6 @@ def convert_frames_to_gray_scale():
     # generate input file name for the next frame
     inFileName = "{}/frame_{:04d}.jpg".format(outputDir, item)
 
-    # load the next frame
-    inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
-
-def extract_gray_frames():
-    # Initialize frame count
-    count = 0
-
-    # open video file
-    vidcap = cv2.VideoCapture('clip.mp4')
-
-    # read first image
-    success, image = vidcap.read()
-
-    print("Reading frame {} {} ".format(count, success))
-    while success:
-        # get a jpg encoded frame
-        success, jpgImage = cv2.imencode('.jpg', image)
-
-        # encode the frame as base 64 to make debugging easier
-        jpgAsText = base64.b64encode(jpgImage)
-
-        # add the frame to the buffer
-        q2.put(jpgAsText)
-
-        success, image = vidcap.read()
-        print('Reading frame {} {}'.format(count, success))
-        count += 1
-
-    print("Frame extraction complete")
-
-
 
 def extract_color_frames():
     if not os.path.exists(outputDir):
@@ -160,7 +132,6 @@ def extract_color_frames():
 
     # initialize frame count
     count = 0
-    count2 = 0
     success, image = vidcap.read()
     # print("Putting frame {} {} ".format(count, success))
     while success:
@@ -181,42 +152,4 @@ time.sleep(2)
 c.start()
 time.sleep(2)
 
-count = 0
-# load the frame
-frameFileName = "{}/frame_{:04d}.jpg".format(outputDir, count)
-frame = cv2.imread(frameFileName)
-startTime = time.time()
-
-while frame is not None:
-
-    print("Displaying frame {}".format(count))
-    # Display the frame in a window called "Video"
-    cv2.imshow("Video", frame)
-
-    # compute the amount of time that has elapsed
-    # while the frame was processed
-    elapsedTime = int((time.time() - startTime) * 1000)
-    print("Time to process frame {} ms".format(elapsedTime))
-
-    # determine the amount of time to wait, also
-    # make sure we don't go into negative time
-    timeToWait = max(1, frameDelay - elapsedTime)
-
-    # Wait for 42 ms and check if the user wants to quit
-    if cv2.waitKey(timeToWait) and 0xFF == ord("q"):
-        break
-
-        # get the start time for processing the next frame
-    startTime = time.time()
-
-    # get the next frame filename
-    count += 1
-    frameFileName = "{}/frame_{:04d}.jpg".format(outputDir, count)
-
-    # Read the next frame file
-    frame = cv2.imread(frameFileName)
-
-# make sure we cleanup the windows, otherwise we might end up with a mess
-cv2.destroyAllWindows()
-
-
+play_video()
