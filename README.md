@@ -1,4 +1,4 @@
-# How to run 'ProducerConsumer.py'
+# How to run `ProducerConsumer.py`
 `python3 ProducerConsumer.py` will create a producer and consumer thread and first change the frame from color to gray then play the video in gray.
 
 
