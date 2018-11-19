@@ -13,7 +13,7 @@ count = 0
 startTime = time.time()
 
 # Generate the filename for the first frame 
-frameFileName = "{}/grayscale_{:04d}.jpg".format(outputDir, count)
+frameFileName = "{}/frame_{:04d}.jpg".format(outputDir, count)
 
 # load the frame
 frame = cv2.imread(frameFileName)

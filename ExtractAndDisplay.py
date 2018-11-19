@@ -43,6 +43,7 @@ def displayFrames(inputBuffer):
         # get the next frame
         frameAsText = inputBuffer.get()
 
+        print("FRAME AS TEXT ", frameAsText)
         # decode the frame 
         jpgRawImage = base64.b64decode(frameAsText)
 
@@ -52,7 +53,7 @@ def displayFrames(inputBuffer):
         # get a jpg encoded frame
         img = cv2.imdecode( jpgImage ,cv2.IMREAD_UNCHANGED)
 
-        print("Displaying frame {}".format(count))        
+        print("Displaying frame {}".format(count))
 
         # display the image in a window called "video" and wait 42ms
         # before displaying the next frame
